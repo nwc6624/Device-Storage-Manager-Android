@@ -5,7 +5,8 @@ plugins {
 
 android {
     namespace = "com.nwc.devicestoragemanager"
-    compileSdk = 34  // Updated to latest stable version
+    compileSdk = 34
+    // Updated to latest stable version
 
     defaultConfig {
         applicationId = "com.nwc.devicestoragemanager"
