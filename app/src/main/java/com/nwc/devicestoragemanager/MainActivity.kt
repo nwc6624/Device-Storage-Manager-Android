@@ -11,8 +11,6 @@ import com.nwc.devicestoragemanager.ui.theme.DeviceStorageManagerTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Request permissions
         requestStoragePermissions()
 
         setContent {
@@ -27,7 +25,6 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
-
         if (!hasPermissions(permissions)) {
             ActivityCompat.requestPermissions(this, permissions, 1)
         }
