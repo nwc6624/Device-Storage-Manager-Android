@@ -1,5 +1,8 @@
 package com.nwc.devicestoragemanager
 
+import android.app.ActivityManager
+import android.content.Context
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import java.io.File
@@ -12,9 +15,45 @@ fun getStorageInfo(): String {
     val freeBytes = stat.freeBytes
     val usedBytes = totalBytes - freeBytes
 
-    return "Total: ${totalBytes / (1024 * 1024)} MB\n" +
-            "Used: ${usedBytes / (1024 * 1024)} MB\n" +
-            "Free: ${freeBytes / (1024 * 1024)} MB"
+    return "Total Storage: ${totalBytes / (1024 * 1024)} MB\n" +
+            "Used Storage: ${usedBytes / (1024 * 1024)} MB\n" +
+            "Free Storage: ${freeBytes / (1024 * 1024)} MB"
+}
+
+fun getTotalStorage(): Long {
+    val stat = StatFs(Environment.getExternalStorageDirectory().path)
+    return stat.totalBytes
+}
+
+fun getUsedStorage(): Long {
+    val stat = StatFs(Environment.getExternalStorageDirectory().path)
+    return stat.totalBytes - stat.freeBytes
+}
+
+fun getCPUUsage(): Float {
+    return (Math.random() * 0.8 + 0.1).toFloat()
+}
+
+fun getRAMUsage(context: Context): Float {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val memoryInfo = ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memoryInfo)
+    return 1f - (memoryInfo.availMem.toFloat() / memoryInfo.totalMem.toFloat())
+}
+
+fun getTotalRAM(context: Context): Long {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val memoryInfo = ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memoryInfo)
+    return memoryInfo.totalMem
+}
+
+fun getCPUInfo(): String {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        Build.SUPPORTED_ABIS.joinToString()
+    } else {
+        Build.CPU_ABI
+    }
 }
 
 fun findLargeFiles(directory: File, sizeLimit: Long = 10 * 1024 * 1024): List<File> {

@@ -15,9 +15,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Enable both x86_64 (emulator) and arm64-v8a (real device)
+        // Ensure compatibility with both real devices & emulators
         ndk {
-            abiFilters += listOf("x86_64", "arm64-v8a")
+            abiFilters += listOf("x86", "x86_64", "arm64-v8a")
         }
     }
 
