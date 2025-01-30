@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+
 }
 
 android {
@@ -14,9 +15,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Ensure x86_64 support for emulator
+        // Enable both x86_64 (emulator) and arm64-v8a (real device)
         ndk {
-            abiFilters += "x86_64"
+            abiFilters += listOf("x86_64", "arm64-v8a")
         }
     }
 
@@ -24,6 +25,15 @@ android {
         release {
             isMinifyEnabled = false
         }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     buildFeatures {
