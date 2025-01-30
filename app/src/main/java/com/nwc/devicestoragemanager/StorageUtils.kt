@@ -20,19 +20,25 @@ fun getStorageInfo(): String {
             "Free Storage: ${freeBytes / (1024 * 1024)} MB"
 }
 
-fun getTotalStorage(): Long {
-    val stat = StatFs(Environment.getExternalStorageDirectory().path)
-    return stat.totalBytes
+fun getStorageBreakdown(): Map<String, Long> {
+    return mapOf(
+        "Apps" to 2L * 1024 * 1024 * 1024,
+        "Photos" to 1L * 1024 * 1024 * 1024,
+        "Videos" to 4L * 1024 * 1024 * 1024,
+        "Music" to 2L * 1024 * 1024 * 1024,
+        "Other" to 3L * 1024 * 1024 * 1024
+    )
 }
 
-fun getUsedStorage(): Long {
-    val stat = StatFs(Environment.getExternalStorageDirectory().path)
-    return stat.totalBytes - stat.freeBytes
+fun findLargeFiles(directory: File, sizeLimit: Long = 10 * 1024 * 1024): List<File> {
+    return directory.listFiles()?.filter { it.isFile && it.length() > sizeLimit } ?: emptyList()
 }
 
-fun getCPUUsage(): Float {
-    return (Math.random() * 0.8 + 0.1).toFloat()
+fun deleteFile(file: File): Boolean {
+    return file.exists() && file.delete()
 }
+
+fun getCPUUsage(): Float = (Math.random() * 0.8 + 0.1).toFloat()
 
 fun getRAMUsage(context: Context): Float {
     val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -48,24 +54,4 @@ fun getTotalRAM(context: Context): Long {
     return memoryInfo.totalMem
 }
 
-fun getCPUInfo(): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        Build.SUPPORTED_ABIS.joinToString()
-    } else {
-        Build.CPU_ABI
-    }
-}
-
-fun findLargeFiles(directory: File, sizeLimit: Long = 10 * 1024 * 1024): List<File> {
-    val largeFiles = mutableListOf<File>()
-    directory.listFiles()?.forEach {
-        if (it.isFile && it.length() > sizeLimit) {
-            largeFiles.add(it)
-        }
-    }
-    return largeFiles
-}
-
-fun deleteFile(file: File): Boolean {
-    return if (file.exists()) file.delete() else false
-}
+fun getCPUInfo(): String = Build.SUPPORTED_ABIS.joinToString()
