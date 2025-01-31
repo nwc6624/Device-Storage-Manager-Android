@@ -4,55 +4,106 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.BatteryManager
-import android.os.Environment
-import android.os.StatFs
+import android.os.*
 import androidx.compose.ui.graphics.Color
 import java.io.File
+import java.io.FileFilter
+import java.io.RandomAccessFile
 
-fun getStorageInfo(): String {
+// Data class for structured storage information
+data class StorageInfo(
+    val total: Float,
+    val used: Float,
+    val free: Float
+)
+
+// Fetch and calculate storage details
+fun getStorageInfo(): StorageInfo {
     val path = Environment.getExternalStorageDirectory()
     val stat = StatFs(path.path)
 
-    val totalBytes = stat.totalBytes
-    val freeBytes = stat.freeBytes
+    val totalBytes = stat.totalBytes.toFloat()
+    val freeBytes = stat.freeBytes.toFloat()
     val usedBytes = totalBytes - freeBytes
 
-    return "Total: ${totalBytes / (1024 * 1024 * 1024)} GB\n" +
-            "Used: ${usedBytes / (1024 * 1024 * 1024)} GB\n" +
-            "Free: ${freeBytes / (1024 * 1024 * 1024)} GB"
-}
-
-fun getStorageBreakdown(): List<Pair<String, Pair<Float, Color>>> {
-    return listOf(
-        "Apps" to (30f to Color.Blue),
-        "Photos" to (20f to Color.Green),
-        "Videos" to (25f to Color.Red),
-        "Documents" to (10f to Color.Magenta),
-        "Audio" to (5f to Color.Yellow),
-        "Other" to (5f to Color.Gray),
-        "Unused" to (20f to Color.Black)
+    return StorageInfo(
+        total = totalBytes / (1024 * 1024 * 1024),
+        used = usedBytes / (1024 * 1024 * 1024),
+        free = freeBytes / (1024 * 1024 * 1024)
     )
 }
 
+// Dynamic storage category breakdown
+fun getStorageBreakdown(): List<Pair<String, Pair<Float, Color>>> {
+    val storageInfo = getStorageInfo()
+    val usedStorage = storageInfo.used
+
+    val apps = usedStorage * 0.30f
+    val photos = usedStorage * 0.20f
+    val videos = usedStorage * 0.25f
+    val documents = usedStorage * 0.10f
+    val audio = usedStorage * 0.05f
+    val other = usedStorage * 0.05f
+    val unused = storageInfo.free
+
+    return listOf(
+        "Apps" to (apps to Color.Blue),
+        "Photos" to (photos to Color.Green),
+        "Videos" to (videos to Color.Red),
+        "Documents" to (documents to Color.Magenta),
+        "Audio" to (audio to Color.Yellow),
+        "Other" to (other to Color.Gray),
+        "Unused" to (unused to Color.Black)
+    )
+}
+
+// Fetch CPU information dynamically
 fun getCpuInfo(): Pair<String, Float> {
-    val cpuName = "Snapdragon 888" // Placeholder, can be modified to fetch dynamically
-    val cpuUsage = (10..90).random().toFloat()
+    val cpuName = try {
+        File("/proc/cpuinfo").bufferedReader().useLines { lines ->
+            lines.find { it.contains("Hardware") }?.split(":")?.get(1)?.trim() ?: "Unknown CPU"
+        }
+    } catch (e: Exception) {
+        "Unknown CPU"
+    }
+
+    val cpuUsage = try {
+        val reader = RandomAccessFile("/proc/stat", "r")
+        val load = reader.readLine().split(" ").filter { it.isNotEmpty() }.map { it.toLong() }
+        reader.close()
+
+        val idle = load[3].toFloat()
+        val total = load.sum().toFloat()
+        ((total - idle) / total) * 100
+    } catch (e: Exception) {
+        (10..90).random().toFloat()  // Fallback random usage
+    }
+
     return Pair(cpuName, cpuUsage)
 }
 
+// Fetch RAM info
 fun getRamInfo(context: Context): Pair<Float, Float> {
     val memoryInfo = ActivityManager.MemoryInfo()
     (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memoryInfo)
+
     val totalRam = memoryInfo.totalMem.toFloat() / (1024 * 1024 * 1024)
     val usedRam = ((memoryInfo.totalMem - memoryInfo.availMem).toFloat() / memoryInfo.totalMem) * 100
+
     return Pair(totalRam, usedRam)
 }
 
+// Fetch system temperature (if available)
 fun getSystemTemperature(): Float {
-    return (30..80).random().toFloat()
+    val tempFile = File("/sys/class/thermal/thermal_zone0/temp")
+    return if (tempFile.exists()) {
+        tempFile.readText().trim().toFloat() / 1000
+    } else {
+        (30..80).random().toFloat()
+    }
 }
 
+// Fetch battery health status
 fun getBatteryHealth(context: Context): String {
     val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     val health = intent?.getIntExtra(BatteryManager.EXTRA_HEALTH, 0) ?: 0
@@ -66,10 +117,29 @@ fun getBatteryHealth(context: Context): String {
     }
 }
 
-fun deleteJunkFiles() {
-    // Simulate junk file deletion
+// Function to clear junk/cache files
+fun deleteJunkFiles(context: Context): Boolean {
+    try {
+        val cacheDir = context.cacheDir
+        return deleteDir(cacheDir)
+    } catch (e: Exception) {
+        return false
+    }
 }
 
+// Helper function to recursively delete directory
+private fun deleteDir(dir: File?): Boolean {
+    if (dir != null && dir.isDirectory) {
+        val children = dir.list()
+        for (child in children!!) {
+            val success = deleteDir(File(dir, child))
+            if (!success) return false
+        }
+    }
+    return dir?.delete() ?: false
+}
+
+// Find large files over 10MB
 fun findLargeFiles(directory: File): List<File> {
-    return directory.listFiles()?.filter { it.length() > 10 * 1024 * 1024 } ?: emptyList()
+    return directory.listFiles()?.filter { it.isFile && it.length() > 10 * 1024 * 1024 } ?: emptyList()
 }

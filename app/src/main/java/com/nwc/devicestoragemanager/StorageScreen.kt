@@ -1,12 +1,12 @@
 package com.nwc.devicestoragemanager
 
+import android.app.usage.StorageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-//import androidx.compose.foundation.gestures.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -44,17 +44,24 @@ fun StorageScreen() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)  // 🔹 Enables scrolling!
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally  // 🔹 Centers content
     ) {
         Text(
             text = "Storage Manager",
             fontSize = MaterialTheme.typography.headlineLarge.fontSize,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth(),
             color = Color.Black
         )
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = storageInfo)
+
+        // Centering Storage Information
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "Total: ${storageInfo.total} GB", fontWeight = FontWeight.Bold)
+            Text(text = "Used: ${storageInfo.used} GB", fontWeight = FontWeight.Bold)
+            Text(text = "Free: ${storageInfo.free} GB", fontWeight = FontWeight.Bold)
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // Storage Breakdown Section
@@ -128,19 +135,19 @@ fun StorageScreen() {
                     progress = i
                     delay(30L)
                 }
-                deleteJunkFiles()
+                clearAppCache(context)  // 🔹 Deletes both app & external cache
                 isCleaning = false
             }
         }) {
-            Text(text = "Clean Junk Files")
+            Text(text = "Clear Cache")
         }
         if (isCleaning) {
             AlertDialog(
                 onDismissRequest = { isCleaning = false },
-                title = { Text("Cleaning in Progress") },
+                title = { Text("Clearing Cache") },
                 text = {
                     Column {
-                        Text("Removing junk files... $progress%")
+                        Text("Removing cache... $progress%")
                         LinearProgressIndicator(progress = progress / 100f)
                     }
                 },
@@ -154,6 +161,22 @@ fun StorageScreen() {
     }
 }
 
+// Function to Clear Cache (Now Includes External Cache)
+fun clearAppCache(context: Context) {
+    try {
+        // Delete internal cache
+        val cacheDir = context.cacheDir
+        cacheDir?.deleteRecursively()
+
+        // Delete external cache (if available)
+        val externalCacheDir = context.externalCacheDir
+        externalCacheDir?.deleteRecursively()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+// Function for Pie Chart Visualization
 @Composable
 fun StoragePieChart(data: List<Pair<String, Pair<Float, Color>>>) {
     Canvas(modifier = Modifier.size(200.dp)) {
