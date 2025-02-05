@@ -25,6 +25,7 @@ Device Storage Manager is a lightweight Android application designed to help use
 - **🔍 File Type Breakdown:** Categorizes storage by images, videos, and documents.
 - **🛑 Low Storage Warnings:** Alerts when storage is below a certain threshold.
 
+
 ## 🔧 Installation
 1. Clone the repository:
    ```sh
