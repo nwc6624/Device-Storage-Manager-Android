@@ -13,6 +13,7 @@ Device Storage Manager is a lightweight Android application designed to help use
 - **Minimum SDK:** 24
 
 - **Target SDK:** 34
+  
 
 
 ## 🔥 Features
