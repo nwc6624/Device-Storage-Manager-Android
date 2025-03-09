@@ -25,6 +25,7 @@ Device Storage Manager is a lightweight Android application designed to help use
 - **📊 Storage Overview:** Displays total, used, and available storage.
 - **📂 Large File Scanner:** Identifies large files that take up excessive storage.
 
+
 ### 🚀 Upcoming Features
 - **🗑️ Delete Large Files:** Users can remove large files directly from the app.
 - **📊 Storage Usage Chart:** Visual progress bar for used/free storage.
